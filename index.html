@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flappy Bird - Crazy Teacher Edition</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(to bottom, #1e3c72, #2a5298);
+            overflow: hidden;
+            padding: 20px;
+        }
+
+        #game-container {
+            position: relative;
+            width: 360px;
+            height: 540px;
+            border: 3px solid #FF6B6B;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 0 30px rgba(255, 107, 107, 0.7);
+            margin-bottom: 20px;
+        }
+
+        #game-canvas {
+            background: linear-gradient(to bottom, #4ECDC4, #556270);
+            display: block;
+        }
+
+        #score-display {
+            position: absolute;
+            top: 20px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            font-size: 40px;
+            font-weight: bold;
+            color: #FFD700;
+            text-shadow: 0 0 10px #FF0000, 0 0 20px #FF0000;
+            z-index: 10;
+        }
+
+        #start-screen, #game-over-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: rgba(0, 0, 0, 0.85);
+            color: white;
+            z-index: 20;
+        }
+
+        #game-over-screen {
+            display: none;
+        }
+
+        h1 {
+            font-size: 32px;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px #FF0000;
+            text-align: center;
+            color: #FF6B6B;
+        }
+
+        button {
+            padding: 15px 30px;
+            font-size: 20px;
+            background: linear-gradient(to bottom, #FF6B6B, #C44569);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s;
+            border: 2px solid #FFD700;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background: linear-gradient(to bottom, #FF8E53, #FF416C);
+            transform: scale(1.05);
+            box-shadow: 0 0 20px #FF0000;
+        }
+
+        .instructions {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 16px;
+            max-width: 90%;
+            line-height: 1.6;
+            color: #FFD700;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #FFD700;
+        }
+        
+        .cute-bird {
+            width: 100px;
+            height: 100px;
+            margin-bottom: 20px;
+            position: relative;
+            filter: drop-shadow(0 0 15px #FFA500);
+        }
+        
+        .burnt-bird {
+            width: 100px;
+            height: 100px;
+            margin-bottom: 20px;
+            position: relative;
+            filter: grayscale(1) brightness(0.3);
+        }
+        
+        .tear {
+            position: absolute;
+            width: 10px;
+            height: 18px;
+            background: #3498db;
+            border-radius: 50%;
+        }
+        
+        .tear-left {
+            left: 30px;
+            top: 65px;
+            animation: tearDrop 2s infinite;
+        }
+        
+        .tear-right {
+            right: 30px;
+            top: 65px;
+            animation: tearDrop 2s infinite 0.5s;
+        }
+        
+        @keyframes tearDrop {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(40px); opacity: 0; }
+        }
+        
+        #final-score {
+            font-size: 28px;
+            margin: 20px 0;
+            color: #FFD700;
+            text-shadow: 0 0 10px #FF0000;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px 20px;
+            border-radius: 10px;
+        }
+        
+        .difficulty-info {
+            background: rgba(255, 107, 107, 0.3);
+            padding: 12px;
+            border-radius: 12px;
+            margin: 15px 0;
+            border: 2px solid #FF6B6B;
+            color: #FFD700;
+            font-size: 16px;
+            text-align: center;
+        }
+
+        #sound-toggle {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255, 107, 107, 0.8);
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            z-index: 100;
+            font-size: 20px;
+            color: white;
+            box-shadow: 0 0 10px rgba(255, 107, 107, 0.7);
+        }
+
+        .sound-test {
+            background: linear-gradient(to bottom, #FF8E53, #FF416C) !important;
+            margin: 10px !important;
+            padding: 10px 15px !important;
+            font-size: 14px !important;
+        }
+
+        .developer-credit {
+            position: absolute;
+            bottom: 15px;
+            width: 100%;
+            text-align: center;
+            font-size: 14px;
+            color: #FFD700;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+
+        .developer-credit span {
+            color: #FF6B6B;
+            font-weight: bold;
+            text-shadow: 0 0 5px #FF0000;
+        }
+
+        .hearts {
+            font-size: 30px;
+            margin-bottom: 15px;
+            animation: pulse 1.5s infinite;
+            filter: drop-shadow(0 0 5px #FF0000);
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        .fire-warning {
+            color: #FF4444;
+            font-weight: bold;
+            text-shadow: 0 0 10px #FF0000;
+            animation: glow 1s infinite alternate;
+            font-size: 18px;
+            margin: 10px 0;
+        }
+
+        @keyframes glow {
+            from { text-shadow: 0 0 5px #FF0000; }
+            to { text-shadow: 0 0 20px #FF0000, 0 0 30px #FF0000; }
+        }
+
+        .inferno-title {
+            background: linear-gradient(45deg, #FF0000, #FFA500, #FFFF00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+            font-size: 36px;
+        }
+        
+        .custom-bird-image {
+            width: 50px;
+            height: 45px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 3px solid #FFD700;
+            box-shadow: 0 0 15px #FF0000;
+        }
+        
+        .burnt-bird-image {
+            width: 50px;
+            height: 45px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 3px solid #333;
+            filter: grayscale(1) brightness(0.3);
+            box-shadow: 0 0 15px #000;
+        }
+        
+        .teacher-pipe-image {
+            width: 80px;
+            height: auto;
+            border-radius: 10px;
+            border: 3px solid #FFD700;
+            box-shadow: 0 0 15px #FF0000;
+        }
+        
+        .teacher-logo {
+            width: 60px;
+            height: 60px;
+            margin-bottom: 15px;
+            border-radius: 50%;
+            border: 3px solid #FF0000;
+            background: white;
+            padding: 5px;
+        }
+        
+        /* Developer Info Modal Styles */
+        #developer-info-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            display: none;
+        }
+        
+        #developer-info-content {
+            background: linear-gradient(to bottom, #1e3c72, #2a5298);
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 350px;
+            width: 90%;
+            text-align: center;
+            border: 3px solid #FF6B6B;
+            box-shadow: 0 0 30px rgba(255, 107, 107, 0.7);
+            position: relative;
+        }
+        
+        #close-modal {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 5px;
+        }
+        
+        .developer-photo {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #FFD700;
+            box-shadow: 0 0 15px #FF0000;
+            margin-bottom: 15px;
+        }
+        
+        .developer-name {
+            font-size: 24px;
+            color: #FFD700;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px #FF0000;
+        }
+        
+        .social-links {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .social-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 12px 20px;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+            transition: all 0.3s;
+            border: 2px solid #FFD700;
+        }
+        
+        .instagram-button {
+            background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+        }
+        
+        .youtube-button {
+            background: linear-gradient(to right, #FF0000, #CC0000);
+        }
+        
+        .social-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px #FF0000;
+        }
+        
+        .social-icon {
+            font-size: 20px;
+        }
+        
+        .thanks-message {
+            margin-top: 20px;
+            font-size: 18px;
+            color: #FFD700;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #FFD700;
+        }
+        
+        #developer-info-button {
+            margin-top: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            background: linear-gradient(to bottom, #4ECDC4, #556270);
+            border: 2px solid #FFD700;
+        }
+        
+        #developer-info-button-game-over {
+            margin-top: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            background: linear-gradient(to bottom, #4ECDC4, #556270);
+            border: 2px solid #FFD700;
+        }
+
+        .easy-mode-indicator {
+            background: rgba(76, 175, 80, 0.7);
+            padding: 8px 15px;
+            border-radius: 20px;
+            color: white;
+            font-weight: bold;
+            margin: 10px 0;
+            border: 2px solid #4CAF50;
+            animation: pulse 2s infinite;
+        }
+
+        /* Game Start Screen Developer Info Button */
+        #game-developer-info-button {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: rgba(255, 215, 0, 0.8);
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            z-index: 100;
+            font-size: 18px;
+            color: #1e3c72;
+            font-weight: bold;
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
+            transition: all 0.3s;
+        }
+
+        #game-developer-info-button:hover {
+            background: rgba(255, 215, 0, 1);
+            transform: scale(1.1);
+            box-shadow: 0 0 20px #FFD700;
+        }
+        
+        .song-info {
+            background: rgba(0, 0, 0, 0.6);
+            padding: 10px;
+            border-radius: 10px;
+            margin: 10px 0;
+            text-align: center;
+            border: 2px solid #FFD700;
+            color: #FFD700;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <button id="sound-toggle">🔊</button>
+        <button id="game-developer-info-button">👨‍💻</button>
+        <canvas id="game-canvas" width="360" height="540"></canvas>
+        <div id="score-display">0</div>
+        
+        <div id="start-screen">
+            <div class="hearts">✈️</div>
+            <h1 class="inferno-title">फ्लैपी बर्ड - क्रेजी टीचर एडिशन</h1>
+            
+            <img src="https://i.ibb.co/LzxPjyMv/IMG-20251105-120303.jpg" alt="Teacher Logo" class="teacher-logo">
+            
+            <div class="cute-bird">
+                <!-- Custom Bird Image -->
+                <img src="https://i.ibb.co/1GyBNBH0/IMG-20251105-105927-removebg-preview.png" alt="Custom Bird" class="custom-bird-image" style="width: 100px; height: 100px;">
+            </div>
+            
+            <div class="difficulty-info">
+                ★ क्रेजी टीचर मोड ★<br>
+                <small>अब ज्यादा स्कोर बनाना आसान!</small>
+            </div>
+
+            <div class="easy-mode-indicator">
+                🎯 क्रेजी टीचर मोड एक्टिव - हाई स्कोर बनाएं! 🎯
+            </div>
+
+            <div class="fire-warning">⚠️ क्रेजी टीचर के पाइप्स से सावधान! ⚠️</div>
+            
+            <div class="song-info">
+                🎵 बैकग्राउंड म्यूजिक: "सैयारा तू तो बदला नहीं है" 🎵
+            </div>
+            
+            <button id="start-button">खेल शुरू करें</button>
+            
+            <button id="developer-info-button">Developer Info</button>
+            
+            <div class="instructions">
+                क्लिक करें या स्पेस बार दबाएं ताकि बर्ड उड़ सके<br>
+                क्रेजी टीचर के पाइप्स से बचें और हाई स्कोर बनाएं!<br>
+                <strong>क्रेजी टीचर मोड: बड़े गैप, धीमी गति, कम ग्रेविटी</strong>
+            </div>
+
+            <div class="developer-credit">
+                Game Developer 👉 <span>Sujeet Sahni</span>
+            </div>
+        </div>
+        
+        <div id="game-over-screen">
+            <h1 class="inferno-title">गेम ओवर! 🇮🇳</h1>
+            <div class="burnt-bird">
+                <!-- Burnt Bird Image -->
+                <img src="https://i.ibb.co/1GyBNBH0/IMG-20251105-105927-removebg-preview.png" alt="Burnt Bird" class="burnt-bird-image" style="width: 100px; height: 100px;">
+                <div class="tear tear-left"></div>
+                <div class="tear tear-right"></div>
+            </div>
+            <div id="final-score">आपका स्कोर: 0</div>
+            <button id="restart-button">फिर से कोशिश करें</button>
+            
+            <button id="developer-info-button-game-over">Developer Info</button>
+
+            <div class="developer-credit">
+                Game Developer 👉 <span>Sujeet Sahni</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Developer Info Modal -->
+    <div id="developer-info-modal">
+        <div id="developer-info-content">
+            <button id="close-modal">×</button>
+            <h2 class="inferno-title">Developer Info</h2>
+            
+            <img src="https://i.ibb.co/Z6bb29s4/IMG-20251031-130045-285.webp" alt="Developer Photo" class="developer-photo">
+            
+            <div class="developer-name">Sujeet Sahni</div>
+            
+            <div class="social-links">
+                <a href="https://www.instagram.com/sujeet__sahni__143?igsh=MTVsc2E5cHk2bnpzbw==" target="_blank" class="social-button instagram-button">
+                    <span class="social-icon"> </span> Instagram
+                </a>
+                
+                <a href="https://youtube.com/@kilchor_gaming143?si=6MXs0xmE-Me_9_i2" target="_blank" class="social-button youtube-button">
+                    <span class="social-icon"> </span> YouTube Channel
+                </a>
+            </div>
+            
+            <div class="thanks-message">
+                Thanks 👍 for play this game
+            </div>
+        </div>
+    </div>
+
+    <!-- Audio Elements -->
+    <audio id="background-music" loop>
+        <source src="https://tremendous-yellow-nk9zkavlob.edgeone.app/Saiyaara_tu_toh_badla_nahi_hai😫❤‍🩹Status_Lyrics_edit(360p)(1).mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+    
+    <audio id="jump-sound">
+        <source src="https://www.soundjay.com/button/beep-07.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+    
+    <audio id="score-sound">
+        <source src="https://www.soundjay.com/button/beep-07.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+    
+    <audio id="hit-sound">
+        <source src="https://www.soundjay.com/button/beep-07.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+    
+    <audio id="game-over-sound">
+        <source src="https://www.soundjay.com/button/beep-07.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+
+    <script>
+        // गेम वेरिएबल्स
+        const canvas = document.getElementById('game-canvas');
+        const ctx = canvas.getContext('2d');
+        const scoreDisplay = document.getElementById('score-display');
+        const startScreen = document.getElementById('start-screen');
+        const gameOverScreen = document.getElementById('game-over-screen');
+        const finalScore = document.getElementById('final-score');
+        const startButton = document.getElementById('start-button');
+        const restartButton = document.getElementById('restart-button');
+        const soundToggle = document.getElementById('sound-toggle');
+        const backgroundMusic = document.getElementById('background-music');
+        
+        // Audio Elements
+        const jumpSound = document.getElementById('jump-sound');
+        const scoreSound = document.getElementById('score-sound');
+        const hitSound = document.getElementById('hit-sound');
+        const gameOverSound = document.getElementById('game-over-sound');
+        
+        // Developer Info Modal Elements
+        const developerInfoModal = document.getElementById('developer-info-modal');
+        const developerInfoButton = document.getElementById('developer-info-button');
+        const developerInfoButtonGameOver = document.getElementById('developer-info-button-game-over');
+        const gameDeveloperInfoButton = document.getElementById('game-developer-info-button');
+        const closeModalButton = document.getElementById('close-modal');
+
+        // Custom bird image
+        const birdImage = new Image();
+        birdImage.src = "https://i.ibb.co/1GyBNBH0/IMG-20251105-105927-removebg-preview.png";
+        
+        const burntBirdImage = new Image();
+        burntBirdImage.src = "https://i.ibb.co/1GyBNBH0/IMG-20251105-105927-removebg-preview.png";
+
+        // Teacher pipe images
+        const teacherPipeImages = [
+            "https://i.ibb.co/LzxPjyMv/IMG-20251105-120303.jpg",
+            "https://i.ibb.co/LzxPjyMv/IMG-20251105-120303.jpg"
+        ];
+        
+        const currentTeacherPipe = new Image();
+        currentTeacherPipe.src = teacherPipeImages[0];
+
+        // Sound system
+        let sounds = {
+            enabled: true
+        };
+
+        // Sound functions
+        function playJumpSound() {
+            if (!sounds.enabled) return;
+            jumpSound.currentTime = 0;
+            jumpSound.volume = 0.3;
+            jumpSound.play().catch(e => console.log("Jump sound play failed:", e));
+        }
+
+        function playScoreSound() {
+            if (!sounds.enabled) return;
+            scoreSound.currentTime = 0;
+            scoreSound.volume = 0.3;
+            scoreSound.play().catch(e => console.log("Score sound play failed:", e));
+        }
+
+        function playHitSound() {
+            if (!sounds.enabled) return;
+            hitSound.currentTime = 0;
+            hitSound.volume = 0.3;
+            hitSound.play().catch(e => console.log("Hit sound play failed:", e));
+        }
+
+        function playGameOverSound() {
+            if (!sounds.enabled) return;
+            gameOverSound.currentTime = 0;
+            gameOverSound.volume = 0.3;
+            gameOverSound.play().catch(e => console.log("Game over sound play failed:", e));
+        }
+
+        function startBackgroundMusic() {
+            if (!sounds.enabled) return;
+            backgroundMusic.currentTime = 0;
+            backgroundMusic.volume = 0.4;
+            backgroundMusic.play().catch(e => {
+                console.log("Background music play failed:", e);
+            });
+        }
+
+        function stopBackgroundMusic() {
+            backgroundMusic.pause();
+            backgroundMusic.currentTime = 0;
+        }
+
+        // Sound toggle functionality
+        soundToggle.addEventListener('click', function() {
+            sounds.enabled = !sounds.enabled;
+            soundToggle.textContent = sounds.enabled ? '🔊' : '🔇';
+            
+            if (!sounds.enabled) {
+                stopBackgroundMusic();
+            } else if (gameState.isRunning) {
+                startBackgroundMusic();
+            }
+        });
+
+        // Developer Info Modal Functions
+        developerInfoButton.addEventListener('click', function() {
+            developerInfoModal.style.display = 'flex';
+        });
+        
+        developerInfoButtonGameOver.addEventListener('click', function() {
+            developerInfoModal.style.display = 'flex';
+        });
+        
+        gameDeveloperInfoButton.addEventListener('click', function() {
+            developerInfoModal.style.display = 'flex';
+        });
+        
+        closeModalButton.addEventListener('click', function() {
+            developerInfoModal.style.display = 'none';
+        });
+        
+        // Close modal when clicking outside the content
+        window.addEventListener('click', function(event) {
+            if (event.target === developerInfoModal) {
+                developerInfoModal.style.display = 'none';
+            }
+        });
+
+        // Animation variables
+        let animationFrame = 0;
+        const particles = [];
+        const skyParticles = [];
+        let birdIsHit = false;
+        let hitAnimationFrame = 0;
+
+        // गेम स्टेट - CRAZY TEACHER MODE SETTINGS
+        let gameState = {
+            isRunning: false,
+            score: 0,
+            gravity: 0.2, // कम ग्रेविटी
+            bird: {
+                x: 60,
+                y: canvas.height / 2,
+                width: 50,
+                height: 45,
+                velocity: 0,
+                jump: -8, // कम जंप फोर्स
+                isHit: false
+            },
+            pipes: [],
+            pipeWidth: 70, // पतले पाइप्स
+            pipeGap: 250, // बड़ा गैप
+            pipeInterval: 2800, // कम पाइप्स
+            lastPipeTime: 0,
+            pipeSpeed: 1.2, // धीमी गति
+            ground: {
+                y: canvas.height - 70,
+                height: 70
+            }
+        };
+
+        // Particle system for pipe animation
+        class Particle {
+            constructor(x, y, isTopPipe) {
+                this.x = x;
+                this.y = y;
+                this.size = Math.random() * 4 + 2;
+                this.speedY = Math.random() * 3 + 1;
+                this.speedX = Math.random() * 2 - 1;
+                this.color = isTopPipe ? '#FF6B6B' : '#4ECDC4';
+                this.life = 100;
+            }
+            
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                this.life--;
+                return this.life > 0;
+            }
+            
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        // Game functions
+        function drawBird() {
+            if (birdIsHit) {
+                ctx.drawImage(burntBirdImage, gameState.bird.x, gameState.bird.y, gameState.bird.width, gameState.bird.height);
+            } else {
+                ctx.drawImage(birdImage, gameState.bird.x, gameState.bird.y, gameState.bird.width, gameState.bird.height);
+            }
+        }
+
+        function createPipe() {
+            const minHeight = 60; // कम पाइप height
+            const maxHeight = canvas.height - gameState.ground.height - gameState.pipeGap - minHeight;
+            const topHeight = Math.floor(Math.random() * (maxHeight - minHeight + 1)) + minHeight;
+            
+            gameState.pipes.push({
+                x: canvas.width,
+                topHeight: topHeight,
+                bottomY: topHeight + gameState.pipeGap,
+                passed: false
+            });
+        }
+
+        function drawPipes() {
+            gameState.pipes.forEach(pipe => {
+                // Top pipe
+                ctx.drawImage(currentTeacherPipe, pipe.x, 0, gameState.pipeWidth, pipe.topHeight);
+                
+                // Bottom pipe
+                ctx.drawImage(currentTeacherPipe, pipe.x, pipe.bottomY, gameState.pipeWidth, canvas.height - pipe.bottomY - gameState.ground.height);
+            });
+        }
+
+        function updatePipes() {
+            if (gameState.isRunning) {
+                const currentTime = Date.now();
+                if (currentTime - gameState.lastPipeTime > gameState.pipeInterval) {
+                    createPipe();
+                    gameState.lastPipeTime = currentTime;
+                }
+            }
+            
+            gameState.pipes.forEach((pipe, index) => {
+                pipe.x -= gameState.pipeSpeed;
+                
+                // Create particles from pipes for animation
+                if (Math.random() < 0.3) {
+                    // Top pipe particles
+                    particles.push(new Particle(
+                        pipe.x + gameState.pipeWidth,
+                        Math.random() * pipe.topHeight,
+                        true
+                    ));
+                    
+                    // Bottom pipe particles
+                    particles.push(new Particle(
+                        pipe.x + gameState.pipeWidth,
+                        pipe.bottomY + Math.random() * (canvas.height - pipe.bottomY - gameState.ground.height),
+                        false
+                    ));
+                }
+                
+                // Check for score
+                if (!pipe.passed && pipe.x + gameState.pipeWidth < gameState.bird.x) {
+                    pipe.passed = true;
+                    gameState.score++;
+                    scoreDisplay.textContent = gameState.score;
+                    playScoreSound();
+                }
+                
+                // Remove pipes that are off screen
+                if (pipe.x + gameState.pipeWidth < 0) {
+                    gameState.pipes.splice(index, 1);
+                }
+            });
+        }
+
+        function checkCollision() {
+            // Ground collision
+            if (gameState.bird.y + gameState.bird.height > gameState.ground.y) {
+                return true;
+            }
+            
+            // Ceiling collision
+            if (gameState.bird.y < 0) {
+                return true;
+            }
+            
+            // Pipe collision with more tolerance
+            for (const pipe of gameState.pipes) {
+                if (
+                    gameState.bird.x + 10 < pipe.x + gameState.pipeWidth - 5 && // Collision tolerance
+                    gameState.bird.x + gameState.bird.width - 10 > pipe.x + 5 && // Collision tolerance
+                    (gameState.bird.y + 5 < pipe.topHeight - 5 || gameState.bird.y + gameState.bird.height - 5 > pipe.bottomY + 5) // Collision tolerance
+                ) {
+                    return true;
+                }
+            }
+            
+            return false;
+        }
+
+        function drawGround() {
+            ctx.fillStyle = '#8B4513';
+            ctx.fillRect(0, gameState.ground.y, canvas.width, gameState.ground.height);
+            
+            ctx.fillStyle = '#90EE90';
+            ctx.fillRect(0, gameState.ground.y, canvas.width, 10);
+        }
+
+        function updateBird() {
+            if (gameState.isRunning) {
+                gameState.bird.velocity += gameState.gravity;
+                gameState.bird.y += gameState.bird.velocity;
+            }
+        }
+
+        function jump() {
+            if (gameState.isRunning) {
+                gameState.bird.velocity = gameState.bird.jump;
+                playJumpSound();
+            }
+        }
+
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw background
+            ctx.fillStyle = '#4ECDC4';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw pipes
+            drawPipes();
+            updatePipes();
+            
+            // Draw ground
+            drawGround();
+            
+            // Draw bird
+            updateBird();
+            drawBird();
+            
+            // Update and draw particles
+            for (let i = particles.length - 1; i >= 0; i--) {
+                if (!particles[i].update()) {
+                    particles.splice(i, 1);
+                } else {
+                    particles[i].draw();
+                }
+            }
+            
+            // Check collision
+            if (checkCollision() && gameState.isRunning) {
+                endGame();
+            }
+            
+            if (gameState.isRunning) {
+                requestAnimationFrame(gameLoop);
+            }
+        }
+
+        function startGame() {
+            gameState.isRunning = true;
+            gameState.score = 0;
+            gameState.bird.y = canvas.height / 2;
+            gameState.bird.velocity = 0;
+            gameState.pipes = [];
+            particles.length = 0; // Clear particles
+            scoreDisplay.textContent = '0';
+            startScreen.style.display = 'none';
+            gameOverScreen.style.display = 'none';
+            birdIsHit = false;
+            
+            if (sounds.enabled) {
+                startBackgroundMusic();
+            }
+            
+            gameLoop();
+        }
+
+        function endGame() {
+            gameState.isRunning = false;
+            birdIsHit = true;
+            finalScore.textContent = `आपका स्कोर: ${gameState.score}`;
+            gameOverScreen.style.display = 'flex';
+            
+            playHitSound();
+            setTimeout(() => playGameOverSound(), 500);
+            stopBackgroundMusic();
+        }
+
+        // Event listeners
+        startButton.addEventListener('click', startGame);
+        restartButton.addEventListener('click', startGame);
+
+        canvas.addEventListener('click', jump);
+        document.addEventListener('keydown', (event) => {
+            if (event.code === 'Space') {
+                jump();
+            }
+        });
+
+        // Initialize game
+        drawBird();
+        
+        // Preload audio
+        window.addEventListener('load', function() {
+            // This helps with audio autoplay policies
+            backgroundMusic.load();
+            jumpSound.load();
+            scoreSound.load();
+            hitSound.load();
+            gameOverSound.load();
+            
+            // User interaction required for audio
+            document.body.addEventListener('click', function() {
+                // This will enable audio playback after user interaction
+            });
+        });
+    </script>
+</body>
+</html>
